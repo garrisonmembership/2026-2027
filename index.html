@@ -120,6 +120,7 @@ import { getDatabase, ref, set, onValue, remove, push } from 'https://www.gstati
 const DB_URL='https://it-fund-23913-default-rtdb.asia-southeast1.firebasedatabase.app';
 const ROOT='chitfund';          // separate node: does not touch other apps' data
 const ADMIN_PASS='change-me';   // CHANGE THIS before publishing
+const MEMBERS_PATH='members';  // existing members list, shared with the old app
 const MAX=38, WEEKS=50, AMT=200, CC='91';
 
 let isAdmin=sessionStorage.getItem('chit_admin')==='1';
@@ -235,12 +236,12 @@ function renderMembers(){
 }
 $('mt').addEventListener('change',e=>{
   const f=e.target.dataset.f;if(!f||!isAdmin||!db)return;
-  set(ref(db,ROOT+'/members/'+e.target.dataset.id+'/'+f),e.target.value.trim());
+  set(ref(db,MEMBERS_PATH+'/'+e.target.dataset.id+'/'+f),e.target.value.trim());
 });
 $('mt').addEventListener('click',e=>{
   const id=e.target.dataset.rm;if(!id||!isAdmin||!db)return;
-  if(!confirm('Remove this member and all their payments?'))return;
-  remove(ref(db,ROOT+'/members/'+id));
+  if(!confirm('Remove this member from the shared members list and delete their payments here? (This also removes them from any other app using this list.)'))return;
+  remove(ref(db,MEMBERS_PATH+'/'+id));
   Object.keys(S.payments).filter(k=>k.startsWith(id+'_')).forEach(k=>remove(ref(db,ROOT+'/payments/'+k)));
 });
 $('addM').onclick=()=>{
@@ -250,7 +251,7 @@ $('addM').onclick=()=>{
   const ms=members();
   if(ms.length>=MAX){alert('Maximum '+MAX+' members reached.');return;}
   const used=new Set(ms.map(m=>m.num));let num=1;while(used.has(num))num++;
-  const r=push(ref(db,ROOT+'/members'));
+  const r=push(ref(db,MEMBERS_PATH));
   set(r,{id:r.key,num,name,phone});
   $('mName').value='';$('mPhone').value='';
 };
@@ -271,9 +272,19 @@ const app=initializeApp({databaseURL:DB_URL},'chitfund');
 db=getDatabase(app);
 onValue(ref(db,ROOT),snap=>{
   const d=snap.val()||{};
-  S.members=d.members||{};S.payments=d.payments||{};S.start=d.startDate||'';
+  S.payments=d.payments||{};S.start=d.startDate||'';
   render();
 },err=>{$('mx').innerHTML='<div class="empty r">Could not load data: '+esc(err.message)+'</div>';});
+function normMembers(raw){
+  const out={};let i=0;
+  Object.entries(raw||{}).forEach(([k,v])=>{
+    if(v==null)return;i++;
+    const o=typeof v==='object'?v:{name:String(v)};
+    out[k]={id:k,num:+o.num||i,name:o.name||o.memberName||o.fullName||'(no name)',phone:o.phone||o.mobile||o.contact||''};
+  });
+  return out;
+}
+onValue(ref(db,MEMBERS_PATH),snap=>{S.members=normMembers(snap.val());render();});
 </script>
 </body>
 </html>
