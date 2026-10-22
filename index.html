@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chit Fund Manager</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#1a0a00;--card:#2a1500;--head:#3a2000;--text:#fdf3e3;--mute:#d4a96a;--line:rgba(212,169,106,.25);--gold:#D4A017;--gold2:#FFD700;--ok:#C8A951;--red:#ff6b6b}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:12px;font-size:14px}
+.app{max-width:1100px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:12px}
+h1{font-size:20px;color:var(--gold2)}
+.sub{font-size:12px;color:var(--mute);margin-top:2px}
+nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+button,.btn{height:34px;padding:0 14px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--text);cursor:pointer;font:inherit;font-size:13px;display:inline-flex;align-items:center;text-decoration:none}
+button:hover,.btn:hover{background:var(--head)}
+nav button.on{color:var(--gold2);border-color:var(--gold)}
+.pri{background:linear-gradient(135deg,#B8860B,#D4A017);border-color:var(--gold);color:#fff}
+.wa{background:#1a7a3a;border-color:#1a7a3a;color:#fff}
+.sm{height:28px;padding:0 10px;font-size:12px}
+.dng{color:var(--red);border-color:var(--red)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--mute);margin-bottom:10px}
+.note{background:rgba(232,184,75,.12);border:1px solid rgba(232,184,75,.3);color:#E8B84B;border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px;margin-top:3px}
+.stat span{font-size:11px;color:var(--mute);text-transform:uppercase}
+.g{color:var(--ok)}.r{color:var(--red)}.a{color:#E8B84B}
+.page{display:none}.page.on{display:block}
+.mxw{overflow:auto;max-height:70vh}
+table{border-collapse:collapse;width:100%}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{font-size:11px;color:var(--mute);background:var(--head);position:sticky;top:0;z-index:2}
+.mx td,.mx th{border:1px solid var(--line);padding:3px 4px;font-size:12px;min-width:34px}
+.mx .nm{position:sticky;left:0;background:var(--card);z-index:1;text-align:left;min-width:150px;padding:4px 8px}
+.mx th.nm{z-index:3;background:var(--head)}
+.cw{background:rgba(212,160,23,.15)}
+.mx th.cw{color:var(--gold2);border-bottom:2px solid var(--gold)}
+.c{display:inline-block;width:26px;height:24px;line-height:24px;border-radius:4px;font-weight:700}
+.c.y{background:rgba(200,169,81,.25);color:var(--gold2)}
+.c.n{background:rgba(226,75,74,.15);color:var(--red)}
+.c.f{opacity:.4}
+body:not(.ro) .c{cursor:pointer}
+.tot{font-weight:700;min-width:70px}
+.tot small{color:var(--ok)}
+.tr td{background:var(--head);font-weight:700;font-size:11px}
+td.l,th.l{text-align:left}
+input{height:34px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:#281300;color:var(--text);font:inherit;min-width:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.row label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
+.empty{text-align:center;color:var(--mute);padding:20px}
+body.ro .adm{display:none!important}
+</style>
+</head>
+<body class="ro">
+<div class="app">
+  <header>
+    <div>
+      <h1 id="ttl">Chit Fund Manager</h1>
+      <div class="sub">38 members &times; &#8377;200 weekly &times; 50 weeks = &#8377;10,000 per member &bull; &#8377;3,80,000 total pool</div>
+    </div>
+    <nav>
+      <button class="on" data-p="matrix">Payment Matrix</button>
+      <button data-p="members">Members</button>
+      <button data-p="settings" class="adm">Settings</button>
+      <button id="auth">Admin Login</button>
+    </nav>
+  </header>
+
+  <div id="roNote" class="note">View only. Log in as admin to record payments and edit members.</div>
+
+  <div id="page-matrix" class="page on">
+    <div class="stats" id="stats"></div>
+    <div class="card">
+      <h3>Payments &mdash; 38 members &times; 50 weeks <span class="adm" style="text-transform:none;letter-spacing:0">(tap a cell to mark paid / undo)</span></h3>
+      <div class="mxw" id="mx"><div class="empty">Loading...</div></div>
+    </div>
+    <div class="card">
+      <h3>Pending &mdash; remind through phone (up to Week <span id="cwk">1</span>)</h3>
+      <div id="pend"></div>
+    </div>
+  </div>
+
+  <div id="page-members" class="page">
+    <div class="card adm">
+      <h3>Add member</h3>
+      <div class="row">
+        <label style="flex:2;min-width:150px">Full name<input id="mName" placeholder="e.g. Ravi Kumar"/></label>
+        <label style="flex:2;min-width:150px">Phone (with country code)<input id="mPhone" placeholder="+919876543210"/></label>
+        <button class="pri" id="addM">+ Add</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>All members (<span id="mc">0</span> / 38)</h3>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>#</th><th class="l">Name</th><th class="l">Phone</th><th>Weeks paid</th><th>Paid</th><th>Balance of &#8377;10,000</th><th>Behind now</th><th></th></tr></thead>
+        <tbody id="mt"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div id="page-settings" class="page adm">
+    <div class="card">
+      <h3>Chit start date</h3>
+      <div class="note">Week 1 starts on this date. The current week, and who is behind, are worked out from it.</div>
+      <div class="row">
+        <label>Week 1 start date<input type="date" id="sd"/></label>
+        <button class="pri" id="saveSd">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, remove, push } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const DB_URL='https://it-fund-23913-default-rtdb.asia-southeast1.firebasedatabase.app';
+const ROOT='chitfund';          // separate node: does not touch other apps' data
+const ADMIN_PASS='change-me';   // CHANGE THIS before publishing
+const MAX=38, WEEKS=50, AMT=200, CC='91';
+
+let isAdmin=sessionStorage.getItem('chit_admin')==='1';
+let db=null, S={members:{},payments:{},start:''};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inr=n=>'\u20b9'+n.toLocaleString('en-IN');
+const members=()=>Object.values(S.members).sort((a,b)=>a.num-b.num);
+const paid=(id,w)=>!!S.payments[id+'_'+w];
+const digits=p=>{let d=(p||'').replace(/\D/g,'');if(d.length===10)d=CC+d;return d;};
+
+function cur(){
+  if(!S.start)return 1;
+  const w=Math.floor((Date.now()-new Date(S.start+'T00:00:00'))/(7*864e5))+1;
+  return Math.min(WEEKS,Math.max(1,w));
+}
+function behind(m){let n=0;for(let w=1;w<=cur();w++)if(!paid(m.id,w))n++;return n;}
+function paidCount(m){let n=0;for(let w=1;w<=WEEKS;w++)if(paid(m.id,w))n++;return n;}
+function msg(m){
+  const n=behind(m),cw=cur();
+  return 'Hi '+m.name+', reminder for our chit fund: your weekly payment of \u20b9'+AMT+' is pending for '+n+' week'+(n>1?'s':'')+' up to Week '+cw+' (\u20b9'+(n*AMT)+' due). Please pay at the earliest. Thank you!';
+}
+
+function applyAuth(){
+  document.body.classList.toggle('ro',!isAdmin);
+  $('auth').textContent=isAdmin?'Admin (log out)':'Admin Login';
+  $('roNote').style.display=isAdmin?'none':'block';
+}
+$('auth').onclick=()=>{
+  if(isAdmin){isAdmin=false;sessionStorage.removeItem('chit_admin');}
+  else{const p=prompt('Admin password');if(p===ADMIN_PASS){isAdmin=true;sessionStorage.setItem('chit_admin','1');}else if(p!==null)alert('Incorrect password.');}
+  applyAuth();render();
+};
+
+document.querySelector('nav').addEventListener('click',e=>{
+  const p=e.target.dataset.p;if(!p)return;
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+  $('page-'+p).classList.add('on');
+  document.querySelectorAll('nav button[data-p]').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  render();
+});
+
+function renderStats(){
+  const ms=members(),cw=cur();
+  const all=Object.keys(S.payments).length;
+  const thisWk=ms.filter(m=>paid(m.id,cw)).length;
+  const unpaid=ms.length-thisWk;
+  $('stats').innerHTML=
+    `<div class="stat"><span>Members</span><b>${ms.length}/${MAX}</b></div>`+
+    `<div class="stat"><span>Current week</span><b class="a">${cw}/${WEEKS}</b></div>`+
+    `<div class="stat"><span>Paid this week</span><b class="g">${thisWk} (${inr(thisWk*AMT)})</b></div>`+
+    `<div class="stat"><span>Unpaid this week</span><b class="${unpaid?'r':'g'}">${unpaid}</b></div>`+
+    `<div class="stat"><span>Collected</span><b class="g">${inr(all*AMT)}</b></div>`+
+    `<div class="stat"><span>Target</span><b>${inr(ms.length*WEEKS*AMT)}</b></div>`;
+}
+
+function renderMatrix(){
+  const ms=members(),cw=cur();
+  if(!ms.length){$('mx').innerHTML='<div class="empty">No members yet. Add them from the Members tab.</div>';return;}
+  let h='<table class="mx"><thead><tr><th class="nm">Member</th>';
+  for(let w=1;w<=WEEKS;w++)h+=`<th class="${w===cw?'cw':''}">${w}</th>`;
+  h+='<th>Paid</th></tr></thead><tbody>';
+  ms.forEach(m=>{
+    let p=0;
+    h+=`<tr><td class="nm">${m.num}. ${esc(m.name)}</td>`;
+    for(let w=1;w<=WEEKS;w++){
+      const ok=paid(m.id,w);if(ok)p++;
+      h+=`<td class="${w===cw?'cw':''}"><span class="c ${ok?'y':'n'}${w>cw&&!ok?' f':''}" data-m="${m.id}" data-w="${w}">${ok?'\u2713':'\u2717'}</span></td>`;
+    }
+    h+=`<td class="tot">${p}/${WEEKS}<br><small>${inr(p*AMT)}</small></td></tr>`;
+  });
+  h+='<tr class="tr"><td class="nm">PER WEEK</td>';
+  for(let w=1;w<=WEEKS;w++){
+    const n=ms.filter(m=>paid(m.id,w)).length;
+    h+=`<td>${n}/${ms.length}</td>`;
+  }
+  h+=`<td>${inr(Object.keys(S.payments).length*AMT)}</td></tr></tbody></table>`;
+  const sc=$('mx'),l=sc.scrollLeft,t=sc.scrollTop;
+  sc.innerHTML=h;sc.scrollLeft=l;sc.scrollTop=t;
+}
+$('mx').addEventListener('click',e=>{
+  const c=e.target.closest('.c');if(!c||!isAdmin||!db)return;
+  const id=c.dataset.m,w=+c.dataset.w,k=id+'_'+w,r=ref(db,ROOT+'/payments/'+k);
+  if(S.payments[k])remove(r);
+  else set(r,{memberId:id,week:w,amount:AMT,date:new Date().toLocaleDateString('en-IN')});
+});
+
+function renderPending(){
+  $('cwk').textContent=cur();
+  const rows=members().filter(m=>behind(m)>0);
+  if(!members().length){$('pend').innerHTML='<div class="empty">Add members first.</div>';return;}
+  if(!rows.length){$('pend').innerHTML='<div class="empty g">All members are paid up to this week.</div>';return;}
+  let h='<div style="overflow:auto"><table><thead><tr><th>#</th><th class="l">Name</th><th class="l">Phone</th><th>Weeks behind</th><th>Due</th><th>Remind</th></tr></thead><tbody>';
+  rows.forEach(m=>{
+    const n=behind(m),d=digits(m.phone),t=encodeURIComponent(msg(m));
+    const wa=d?`<a class="btn sm wa" target="_blank" rel="noopener" href="https://wa.me/${d}?text=${t}">WhatsApp</a>`:'';
+    const sms=m.phone?`<a class="btn sm" href="sms:${esc(m.phone.replace(/[^\d+]/g,''))}?body=${t}">SMS</a>`:'<span style="color:var(--mute)">No phone</span>';
+    h+=`<tr><td>${m.num}</td><td class="l">${esc(m.name)}</td><td class="l">${esc(m.phone||'\u2014')}</td><td class="r">${n}</td><td class="r">${inr(n*AMT)}</td><td style="display:flex;gap:6px;justify-content:center">${wa}${sms}</td></tr>`;
+  });
+  $('pend').innerHTML=h+'</tbody></table></div>';
+}
+
+function renderMembers(){
+  const ms=members();
+  $('mc').textContent=ms.length;
+  if(!ms.length){$('mt').innerHTML='<tr><td colspan="8" class="empty">No members yet.</td></tr>';return;}
+  $('mt').innerHTML=ms.map(m=>{
+    const p=paidCount(m),b=behind(m);
+    const name=isAdmin?`<input data-f="name" data-id="${m.id}" value="${esc(m.name)}"/>`:esc(m.name);
+    const ph=isAdmin?`<input data-f="phone" data-id="${m.id}" value="${esc(m.phone||'')}" placeholder="+91..."/>`:esc(m.phone||'\u2014');
+    return `<tr><td>${m.num}</td><td class="l">${name}</td><td class="l">${ph}</td><td>${p}/${WEEKS}</td><td class="g">${inr(p*AMT)}</td><td class="${p>=WEEKS?'g':''}">${p>=WEEKS?'\u2713 Clear':inr((WEEKS-p)*AMT)}</td><td class="${b?'r':'g'}">${b?b+' wk ('+inr(b*AMT)+')':'\u2713'}</td><td class="adm"><button class="sm dng" data-rm="${m.id}">Remove</button></td></tr>`;
+  }).join('');
+}
+$('mt').addEventListener('change',e=>{
+  const f=e.target.dataset.f;if(!f||!isAdmin||!db)return;
+  set(ref(db,ROOT+'/members/'+e.target.dataset.id+'/'+f),e.target.value.trim());
+});
+$('mt').addEventListener('click',e=>{
+  const id=e.target.dataset.rm;if(!id||!isAdmin||!db)return;
+  if(!confirm('Remove this member and all their payments?'))return;
+  remove(ref(db,ROOT+'/members/'+id));
+  Object.keys(S.payments).filter(k=>k.startsWith(id+'_')).forEach(k=>remove(ref(db,ROOT+'/payments/'+k)));
+});
+$('addM').onclick=()=>{
+  if(!isAdmin||!db)return;
+  const name=$('mName').value.trim(),phone=$('mPhone').value.trim();
+  if(!name){alert('Enter a name.');return;}
+  const ms=members();
+  if(ms.length>=MAX){alert('Maximum '+MAX+' members reached.');return;}
+  const used=new Set(ms.map(m=>m.num));let num=1;while(used.has(num))num++;
+  const r=push(ref(db,ROOT+'/members'));
+  set(r,{id:r.key,num,name,phone});
+  $('mName').value='';$('mPhone').value='';
+};
+
+$('saveSd').onclick=()=>{
+  if(!isAdmin||!db)return;
+  const v=$('sd').value;if(!v){alert('Pick a date.');return;}
+  set(ref(db,ROOT+'/startDate'),v);alert('Start date saved.');
+};
+
+function render(){
+  renderStats();renderMatrix();renderPending();renderMembers();
+  if(document.activeElement!==$('sd'))$('sd').value=S.start||'';
+}
+
+applyAuth();
+const app=initializeApp({databaseURL:DB_URL},'chitfund');
+db=getDatabase(app);
+onValue(ref(db,ROOT),snap=>{
+  const d=snap.val()||{};
+  S.members=d.members||{};S.payments=d.payments||{};S.start=d.startDate||'';
+  render();
+},err=>{$('mx').innerHTML='<div class="empty r">Could not load data: '+esc(err.message)+'</div>';});
+</script>
+</body>
+</html>
